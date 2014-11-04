@@ -1,7 +1,7 @@
 {
-  "name": "mongoose-redis-cache",
-  "version": "0.0.3+patch.1",
-  "description": "Plugin to cache Mongoose MongoDB query results in Redis",
+  "name": "mongoose-local-cache",
+  "version": "0.0.4",
+  "description": "Plugin to cache Mongoose MongoDB query results in local LRU cache",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -11,23 +11,21 @@
     "test": "test"
   },
   "dependencies": {
-    "redis": "~0.10.0",
-    "underscore": "~1.5.2"
+    "lru-cache": "git://github.com/boschicr/node-lru-cache",
+    "underscore": "^1.7.0"
   },
   "devDependencies": {
-    "mocha": "~1.17.0",
-    "async": "~0.2.9",
-    "mongoose": "~3.8.4"
+    "async": "^0.9.0",
+    "mocha": "^2.0.1",
+    "mongoose": "^3.8.18"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/conancat/mongoose-redis-cache.git"
+    "url": "https://github.com/boschicr/mongoose-local-cache.git"
   },
   "keywords": [
     "mongodb",
     "mongoose",
-    "redis",
     "cache"
-  ],
-  "author": "Grey Ang"
+  ]
 }

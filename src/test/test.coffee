@@ -1,4 +1,4 @@
-# Test case for Mongoose-Redis Cache
+# Test case for Mongoose Local Cache
 
 # Testing methodology:
 #
@@ -11,7 +11,7 @@
 # Execute test rounds:
 # For every round we query the database for all the names (defaults to 20 of them),
 # and tracks the amount of time required to return the data. We run these same queries
-# with and without Redis caching, for 20 rounds. Then we average out the time
+# with and without local caching, for 20 rounds. Then we average out the time
 # needed to return the data. All queries are query.lean(), meaning all documents
 # returned are NOT casted as Mongoose models.
 #
@@ -22,7 +22,7 @@ mongoose = require "mongoose"
 {Schema} = mongoose
 async = require "async"
 _ = require "underscore"
-mongooseRedisCache = require "../index"
+mongooseLocalCache = require "../index"
 
 # Some test variables, feel free to change this to play around
 itemsCount = 100
@@ -30,8 +30,8 @@ testRounds = 5
 cacheExpires = 60
 timeout = 1000 * 30
 
-totalTimeWithoutRedis = 0
-totalTimeWithRedis = 0
+totalTimeWithoutCache = 0
+totalTimeWithCache = 0
 
 # List of names to generate mocks
 mockNames = [
@@ -77,8 +77,8 @@ TestItemSchema = new Schema
     index: true # Index the Name field for query
 
 # Set schema to include caching
-TestItemSchema.set 'redisCache', true
-TestItemSchema.set 'expires', cacheExpires
+TestItemSchema.set 'cache', true
+# TestItemSchema.set 'ttl', cacheExpires
 
 TestItem = mongoose.model 'TestItem', TestItemSchema
 
@@ -123,7 +123,7 @@ runTestRound = (callback) ->
   fn = (cb) ->
     queryStartTime = new Date()
 
-    query = TestItem.find {}
+    query = TestItem.findOne {}
     query.where "name", mockNames[currQueryCount]
 
     # Making sure it's a lean call!
@@ -165,7 +165,7 @@ before (done) ->
   console.log """
 
     =========================
-    Mongoose-Redis Cache Test
+    Mongoose Local Cache Test
     =========================
     Total items in DB: #{itemsCount}
     Total number of queries per round: #{maxQueriesCount}
@@ -188,7 +188,7 @@ describe "Mongoose queries without caching", ->
   before ->
     console.log """
       \n--------------------------------
-      Test query without Redis caching
+      Test query without local caching
       --------------------------------
       Begin executing queries without caching
     """
@@ -206,22 +206,24 @@ describe "Mongoose queries without caching", ->
     console.log "\n\nTotal time for #{testRounds} test rounds:", totalTime + "ms"
     console.log "Average time for each round:", (totalTime / testRounds).toFixed(2) + "ms"
 
-    totalTimeWithoutRedis = totalTime
+    totalTimeWithoutCache = totalTime
 
 # Start test for queries with caching
 describe "Mongoose queries with caching", ->
   before ->
-    # Setup mongooseRedisCache
-    mongooseRedisCache mongoose,
-      host: "proxy.openredis.com"
-      port: 11406
-      pass: "BNX8dYfmpAjm52b8dtBcB0lPij4dbZT0PmNurfNCNHmGGPy7Zq8SBR6ejezls11r"
+    # Setup mongooseLocalCache
+    mongooseLocalCache mongoose,
+      # host: "proxy.openredis.com"
+      # port: 11406
+      # pass: "BNX8dYfmpAjm52b8dtBcB0lPij4dbZT0PmNurfNCNHmGGPy7Zq8SBR6ejezls11r"
+      max: 1000,
+      ttl: 60
     , (err) ->
       console.log """
         \n--------------------------------
-        Test query with Redis caching
+        Test query with local caching
         --------------------------------
-        Begin executing queries with Redis caching
+        Begin executing queries with local caching
       """
 
   totalTime = 0
@@ -237,7 +239,7 @@ describe "Mongoose queries with caching", ->
     console.log "\n\nTotal time for #{testRounds} test rounds:", totalTime + "ms"
     console.log "Average time for each round:", (totalTime / testRounds).toFixed(2) + "ms"
 
-    totalTimeWithRedis = totalTime
+    totalTimeWithCache = totalTime
 
 
 # Done test!
@@ -247,8 +249,8 @@ after (done) ->
   ------------
   CONCLUSION
   ------------
-  Caching with Redis makes Mongoose lean queries faster by #{totalTimeWithoutRedis - totalTimeWithRedis} ms.
-  That's #{(totalTimeWithoutRedis / totalTimeWithRedis * 100).toFixed(2)}% faster!
+  Caching locally makes Mongoose lean queries faster by #{totalTimeWithoutCache - totalTimeWithCache} ms.
+  Speed-up: #{((totalTimeWithoutCache / totalTimeWithCache * 100)-100).toFixed(2)}%
   """
 
 
