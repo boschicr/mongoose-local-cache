@@ -84,6 +84,7 @@ mongooseLocalCache = function(mongoose, options, callback) {
     cb(null, value);
     return this;
   };
+  return typeof callback === "function" ? callback(null) : void 0;
 };
 
 module.exports = mongooseLocalCache;

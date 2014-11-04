@@ -98,7 +98,7 @@ mongooseLocalCache = (mongoose, options, callback) ->
 
     return @
 
-  return
+  return callback? null
 
 # Just some exports, hah.
 module.exports = mongooseLocalCache
