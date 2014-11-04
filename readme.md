@@ -1,25 +1,24 @@
-# mongoose-redis-cache
+# mongoose-local-cache
 
-Plugin to cache Mongoose MongoDB query results in Redis. Lean DB queries, at least 300% faster!
+Plugin to cache Mongoose MongoDB query results locally with node-lru-cache. Lean DB queries, much faster!
 
-## 30/5/2014 - A note about this project
+Forked from https://github.com/conancat/mongoose-redis-cache
 
-Sorry guys that I haven't been around to maintain this project! This project has not been actively maintained and I'm terribly sorry for that. 
+Modified to make use of local LRU cache (through node-lru-cache) instead of Redis for caching.
 
-I would love to have someone to help as active contributors to this project, if you're interested please do email me at conancat@gmail.com, and we'll work something out! Thank you so much guys!! 
 
 ## How to use
 First, the usual:
 
-    npm install mongoose-redis-cache
+    npm install boschicr/mongoose-local-cache
 
 Then,
 
     Setup mongoose connect as usual:
 
        var mongoose = require("mongoose");
-       var mongooseRedisCache = require("mongoose-redis-cache");
-       mongoose.connect("mongodb://localhost/mongoose-redis-test")
+       var mongooseLocalCache = require("mongoose-local-cache");
+       mongoose.connect("mongodb://localhost/mongoose-local-test")
 
     Create your schemas as usual:
 
@@ -33,11 +32,7 @@ Then,
 
        REQUIRED: Enable Redis caching on this schema by specifying
 
-           ExampleSchema.set('redisCache', true)
-
-       OPTIONAL: Change the time for the cache of this schema. Defaults to 60 seconds.
-
-           ExampleSchema.set('expires', 30)
+           ExampleSchema.set('cache', true)
 
     Register the schema as usual:
 
@@ -45,13 +40,13 @@ Then,
 
     Setup your mongooseCache options:
 
-        # If you're running this locally,
-        mongooseRedisCache(mongoose)
+        # With default options (max 1000 cached queries, cached for 1 minute)
+        mongooseLocalCache(mongoose)
 
-        # Or if you're running a remote Redis DB
-        mongooseRedisCache(mongoose, {
-           host: "redisHost",
-           port: "redisPort",
+        # Or if you want to customize the cache parameters
+        mongooseLocalCache(mongoose, {
+           max: 500, // Maximum number of entries in the cache
+           ttl: 5*60, // Time To Live, in seconds
            pass: "redisPass",
            options: "redisOptions"
          })
@@ -61,54 +56,12 @@ Then,
         query = Example.find({})
         query.where("field1", "foo")
         query.where("field2").gte(30)
-        query.lean()  mongooseRedisCache only works for query.lean() queries!
+        query.lean()  mongooseLocalCache only works for query.lean() queries!
         query.exec(function(err, result){
             Do whatever here!
         });
 
-    Use nocache option to disable caching for the given query:
-
-        query = Example.find({}).setOptions({nocache: true})
-
 Check out the test example for more information.
-
-## Test results:
-
-    =========================
-    Mongoose-Redis Cache Test
-    =========================
-    Total items in DB: 30000
-    Total number of queries per round: 20
-    Total number of rounds: 30
-
-    Generating 30000 mocks...
-
-    --------------------------------
-    Test query without Redis caching
-    --------------------------------
-    Begin executing queries without caching
-    ․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․
-
-    Total time for 30 test rounds: 12620ms
-    Average time for each round: 420.67ms
-
-    --------------------------------
-    Test query with Redis caching
-    --------------------------------
-    Begin executing queries with Redis caching
-    ․․․․․․․․․․․․․․․․․․․․․․․․․․․․․․
-
-    Total time for 30 test rounds: 3618ms
-    Average time for each round: 120.60ms
-    ------------
-    CONCLUSION
-    ------------
-    Caching with Redis makes Mongoose lean queries faster by 9002 ms.
-    That's 348.81% faster!
-
-
-    End tests.
-    Wiping DB and exiting
 
 ## How this works
 
@@ -124,15 +77,14 @@ document, we can call [query.lean()](http://mongoosejs.com/docs/api.html#query_Q
 our queries to remove the step which casts the documents into models. Documents are returned as normal Javascript
 objects without the Model constructor functions, and values are not casted. This speeds things up considerably.
 
-### Caching with Redis
+### Caching data locally
 
 What if we want to speed things up even faster?
 
 In these situations where we don't need Mongoose model functionalities, we may want to ramp out our reading speed
-higher by caching data in Redis.
+higher by caching data locally. Especially if we're talking about read-only data.
 
-Redis is awesome for caching data. By caching our MongoDB results in Redis, we can get at least 300% increase in
-speed when reading the data. This is AFTER indexing in MongoDB.
+Caching data locally we avoid any networking overhead at the expense of increased memory usage. Your requirements will usually dictate if that's a reasonable trade-off.
 
 Cool for high-volume data reading!
 
@@ -141,45 +93,21 @@ Cool for high-volume data reading!
 ### Setting up
 
     # If you're running this locally,
-    mongooseRedisCache(mongoose)
+    mongooseLocalCache(mongoose)
 
-    # Or if you're running a remote Redis DB
-    mongooseRedisCache(mongoose, {
-       host: "redisHost",
-       port: "redisPort",
-       pass: "redisPass",
-       options: "redisOptions"
-     })
-
-    # You can also configure redis prefix
-    # It'll allow you to create several completely isolated caches
-    mongooseRedisCache(mongoose, {
-       prefix: "cache1",
-       cache: true
+    # Or if you need some specific cache parameters
+    mongooseLocalCache(mongoose, {
+      max: 5000,
+      ttl: 2 * 60
      })
 
 ### cache: Boolean
-	mongooseRedisCache(mongoose, {
-       cache: true
-     })
 
-OPTIONAL 
-Set cache to true if you need to enable caching for all collections. 
-
-### redisCache: Boolean
-
-    ExampleSchema.set('redisCache', true)
+    ExampleSchema.set('cache', true)
 
 OPTIONAL 
 Call this function on whatever collection you want to cache. You don't have to use this on every collection,
 right? Pick and choose your collections wisely, you shall.
-
-### expires: Number
-
-    ExampleSchema.set('expires', 30)
-
-OPTIONAL
-Set the expiry time for the Redis key in seconds. Defaults to 60.
 
 
 ### query.lean()
@@ -203,10 +131,10 @@ Try testing this on your machine and let me know how it went for you!
 The usual jazz:
 
     # Clone em!
-    git clone https://github.com/conancat/mongoose-redis-cache.git
+    git clone https://github.com/boschicr/mongoose-local-cache.git
 
     # Install those packages
-    cd mongoose-redis-cache
+    cd mongoose-local-cache
     npm install
 
     # If you don't have Mocha installed already
@@ -239,8 +167,4 @@ This gives us fair comparison between Redis caching and direct MongoDB queries.
 
 * [mongoose](https://github.com/LearnBoost/mongoose)
 * [node-redis](https://github.com/mranney/node_redis)
-
-## Contact
-
-Let's talk! I'm on [Twitter](https://twitter.com/conancat), [Reddit](http://www.reddit.com/user/conancat), or you can email me at conancat@gmail.com.
 
