@@ -1,6 +1,6 @@
 # Some module requires
 crypto = require "crypto"
-_ = require "underscore"
+_ = require "lodash"
 lruCache = require "lru-cache"
 
 # Begin the happy thing!

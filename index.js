@@ -3,7 +3,7 @@ var DEFAULT_CACHE_MAX_SIZE, DEFAULT_CACHE_TTL, crypto, lruCache, mongooseLocalCa
 
 crypto = require("crypto");
 
-_ = require("underscore");
+_ = require("lodash");
 
 lruCache = require("lru-cache");
 
