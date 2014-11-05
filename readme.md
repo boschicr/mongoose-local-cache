@@ -28,9 +28,9 @@ Then,
           field3: Date
        });
 
-    Enable redisCache on the schema!
+    Enable cache on the schema!
 
-       REQUIRED: Enable Redis caching on this schema by specifying
+       REQUIRED: Enable local caching on this schema by specifying
 
            ExampleSchema.set('cache', true)
 
@@ -46,9 +46,7 @@ Then,
         # Or if you want to customize the cache parameters
         mongooseLocalCache(mongoose, {
            max: 500, // Maximum number of entries in the cache
-           ttl: 5*60, // Time To Live, in seconds
-           pass: "redisPass",
-           options: "redisOptions"
+           ttl: 5*60 // Time To Live, in seconds
          })
 
     Make a query as usual:
@@ -157,11 +155,11 @@ the field we want to query.
 #### Execute test rounds
 For every round we query the database for all the names (defaults to 20 of them),
 and tracks the amount of time required to return the data. Each query returns around 1100 documents per call.
-We run these same queries with and without Redis caching, for 20 rounds. Then we average out the time
+We run these same queries with and without local caching, for 20 rounds. Then we average out the time
 needed to return the data.
 
 All queries are query.lean(), meaning all documents returned are NOT casted as Mongoose models.
-This gives us fair comparison between Redis caching and direct MongoDB queries.
+This gives us a fair comparison between local caching and direct MongoDB queries.
 
 ## These awesome people!
 
