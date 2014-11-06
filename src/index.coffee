@@ -2,6 +2,7 @@
 crypto = require "crypto"
 _ = require "lodash"
 lruCache = require "lru-cache"
+debug = require("debug")("mongoose-local-cache")
 
 # Begin the happy thing!
 # How we do it:
@@ -58,11 +59,16 @@ mongooseLocalCache = (mongoose, options, callback) ->
     schemaOptions = model.schema.options
     collectionName = model.collection.name
 
+    debug "---"
+    debug "Query: " + collectionName + ":" + JSON.stringify(query)
+
     # Enable caching only for those schemas explicitly specifying it, and 
     # only for lean queries
     unless schemaOptions.cache and @_mongooseOptions.lean
+      debug "Using mongodb"
       return mongoose.Query::_exec.apply self, arguments
 
+    debug "Using cache"
     hash = crypto.createHash 'md5'
       .update JSON.stringify query
       .update JSON.stringify options
@@ -87,9 +93,11 @@ mongooseLocalCache = (mongoose, options, callback) ->
           if err then return callback err
           str = JSON.stringify docs
           client.set key, str
+          debug "Cache miss: " + str
           callback null, docs
       else
         # Key is found, yay! Return the baby!
+        debug "Cache hit: " + result
         docs = JSON.parse(result)
         return callback null, docs
 
