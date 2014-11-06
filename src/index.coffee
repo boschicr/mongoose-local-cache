@@ -94,11 +94,11 @@ mongooseLocalCache = (mongoose, options, callback) ->
           str = JSON.stringify docs
           client.set key, str
           debug "Cache miss: " + str
-          callback null, docs
+          callback null, JSON.parse str
       else
         # Key is found, yay! Return the baby!
         debug "Cache hit: " + result
-        docs = JSON.parse(result)
+        docs = JSON.parse result
         return callback null, docs
 
     value = client.get key

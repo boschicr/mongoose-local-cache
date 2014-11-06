@@ -80,7 +80,7 @@ mongooseLocalCache = function(mongoose, options, callback) {
           str = JSON.stringify(docs);
           client.set(key, str);
           debug("Cache miss: " + str);
-          return callback(null, docs);
+          return callback(null, JSON.parse(str));
         });
       } else {
         debug("Cache hit: " + result);
